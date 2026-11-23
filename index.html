@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 러닝 기록장</title>
+<meta name="theme-color" content="#ff5a1f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 대회 당일 아침의 설렘 — 굵고 또렷하게, 군더더기 없이.
+   IDEA: 레이스 배번(bib). 숫자는 배번처럼 크고 두껍게, 카드는 핀 구멍이 있는 종이.
+   PICTURE: 첫 화면은 월별 거리 막대그래프 + 배번 모양 통계. 대회 탭은 주차별 훈련표.
+   COLOUR and TYPE: 흰 종이 + 잉크 검정 + 출발선 오렌지 한 가지. Archivo 900 숫자, Noto Sans KR 본문.
+   LAYOUT: 상단 탭 3개, 폭 1100px, 600px 이하 한 줄로 쌓기. */
+:root{color-scheme:light dark;--bg:light-dark(#fbfaf7,#141312);--paper:light-dark(#ffffff,#1e1c1a);--ink:light-dark(#151413,#f3efe9);--mute:light-dark(#6b6660,#a59f97);--line:light-dark(#e6e1d9,#34302c);--acc:#ff5a1f;--acc2:light-dark(#fff0e8,#3a2216);--ok:light-dark(#0b7a53,#5fd4a3)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Noto Sans KR',system-ui,sans-serif;overflow-x:clip}
+.num{font-family:'Archivo','Noto Sans KR',sans-serif;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--ink)}
+.hd{max-width:1100px;margin:auto;display:flex;align-items:center;gap:12px;padding:10px max(4vw,14px);flex-wrap:wrap}
+.logo{font:900 20px/1 'Archivo','Noto Sans KR';display:flex;align-items:center;gap:8px}
+.logo i{width:14px;height:14px;background:var(--acc);border-radius:50%;display:inline-block}
+nav{display:flex;gap:4px;margin-left:auto}
+nav a{color:var(--ink);text-decoration:none;padding:10px 14px;border-radius:999px;font-weight:700;font-size:15px;min-height:44px;display:flex;align-items:center}
+nav a.on{background:var(--ink);color:var(--bg)}
+.sync{font:13px "Noto Sans KR";color:var(--mute);background:none;border:0;width:100%;text-align:right;margin-top:-6px;cursor:pointer;padding:4px 0}
+.sync[data-s=ok]{color:var(--ok)}.sync[data-s=off],.sync[data-s=local],.sync[data-s=err],.sync[data-s=setup]{color:var(--acc);text-decoration:underline}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}.lnk:hover{color:var(--acc)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.kv div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kv span{display:block;font-size:13px;color:var(--mute)}.kv b{font-size:17px;font-variant-numeric:tabular-nums}.kv small{font-size:12px;color:var(--mute);font-weight:500}
+.st{margin:0 0 10px;font-size:18px}
+code{background:var(--acc2);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+main{max-width:1100px;margin:auto;padding:20px max(4vw,14px) 80px}
+h1{font:900 clamp(28px,5vw,44px)/1.08 'Noto Sans KR';margin:8px 0 6px;text-wrap:balance;letter-spacing:-.02em}
+h2{font:800 22px/1.2 'Noto Sans KR';margin:34px 0 12px}
+.sub{color:var(--mute);margin:0 0 18px}
+.btn{font:700 15px 'Noto Sans KR';border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.btn.ghost{border-color:var(--line)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bibs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.bib{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:16px 16px 14px;position:relative}
+.bib::before,.bib::after{content:"";position:absolute;top:9px;width:8px;height:8px;border-radius:50%;border:2px solid var(--line)}
+.bib::before{left:9px}.bib::after{right:9px}
+.bib .k{font-size:13px;color:var(--mute);margin-top:6px}
+.bib .v{font-size:clamp(28px,4vw,40px);line-height:1}
+.bib .v small{font-size:15px;font-weight:700;margin-left:3px;color:var(--mute)}
+.bib.hot{background:var(--acc);border-color:var(--acc);color:#fff}.bib.hot .k,.bib.hot .v small{color:#fff9}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+.fig{position:relative;min-height:300px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.next{display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--bg);border-radius:14px;padding:14px 18px;cursor:pointer;margin-top:6px}
+.next .d{font-size:34px;color:var(--acc);line-height:1}
+.prs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pr{border-left:4px solid var(--acc);padding:6px 12px}
+.pr .v{font-size:26px}
+.pr .k{font-size:13px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:13px;color:var(--mute);font-weight:500;border-bottom:2px solid var(--ink);padding:8px 6px}
+td{border-bottom:1px solid var(--line);padding:10px 6px;vertical-align:top}
+td.r,th.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+input,select{font:16px 'Noto Sans KR';padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);min-height:44px;width:100%}
+label{display:block;font-size:14px;font-weight:700;margin-bottom:4px}
+.form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.form .full{grid-column:1/-1}
+details.help{background:var(--acc2);border-radius:12px;padding:12px 16px;margin:14px 0}
+details.help summary{cursor:pointer;font-weight:700}
+details.help ol{margin:8px 0 2px;padding-left:20px}
+.empty{border:2px dashed var(--line);border-radius:14px;padding:36px 20px;text-align:center;color:var(--mute)}
+.races{display:grid;gap:12px}
+.race{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:var(--paper);border:2px solid var(--ink);border-radius:14px;padding:14px 18px;cursor:pointer;text-align:left;color:var(--ink);font:inherit;width:100%}
+.race.past{border-color:var(--line)}
+.race .dd{font-size:28px;line-height:1;min-width:84px}
+.race.up .dd{color:var(--acc)}
+.race .nm{font-weight:800;font-size:17px}
+.race .meta{font-size:14px;color:var(--mute)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--acc2);color:var(--acc)}
+.weeks{display:grid;gap:10px}
+.wk{display:grid;grid-template-columns:120px 1fr;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.wk.now{border:2px solid var(--acc);box-shadow:0 0 0 4px var(--acc2)}
+.wk .w{font-size:22px;line-height:1}
+.wk .ph{font-size:13px;font-weight:700;color:var(--acc);margin-top:4px}
+.wk .dt{font-size:13px;color:var(--mute)}
+.wk .km{font-size:13px;color:var(--mute);margin-top:6px}
+.ses{display:grid;gap:6px}
+.se{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:baseline;font-size:15px}
+.se b.day{font-weight:900;color:var(--mute)}
+.se .pc{font-size:13px;color:var(--mute);white-space:nowrap}
+.se.q b.day{color:var(--acc)}
+.se.race-day{font-weight:800;color:var(--acc)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.ph-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;padding:0;text-align:left;font:inherit;color:inherit}
+.ph-card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--line)}
+.ph-card .cap{padding:10px 12px}
+.ph-card .cap b{display:block;font-size:15px}
+.ph-card .cap span{font-size:13px;color:var(--mute)}
+.lb{position:fixed;inset:0;background:#000d;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:12px}
+.lb.on{display:flex}.lb img{max-width:100%;max-height:82vh;border-radius:8px}
+.lb .row .btn{background:#fff;color:#111;border-color:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-weight:700;z-index:30;opacity:0;transition:opacity .25s;pointer-events:none;max-width:92vw}
+.toast.on{opacity:1}
+.note{font-size:13px;color:var(--mute)}
+.hide{display:none!important}
+.ac{position:relative}
+.ac-list{position:absolute;left:0;right:0;top:100%;z-index:6;background:var(--paper);border:2px solid var(--ink);border-radius:10px;margin-top:4px;max-height:300px;overflow:auto}
+.ac-list button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;font:15px 'Noto Sans KR';color:var(--ink);cursor:pointer;min-height:44px}
+.ac-list button:hover,.ac-list button:focus{background:var(--acc2)}
+.ac-list small{display:block;color:var(--mute);font-size:13px}
+.cands{display:grid;gap:8px;margin-top:10px}
+.cand{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;font:inherit;color:inherit;text-align:left;width:100%;min-height:48px}
+.cand:hover{border-color:var(--acc)}
+.cand .tag{flex:none}
+.lapsum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:8px 0}
+.lapsum div{border-left:3px solid var(--acc);padding:2px 10px}.lapsum b{display:block;font:900 22px 'Archivo','Noto Sans KR'}.lapsum span{font-size:13px;color:var(--mute)}
+.insight{background:var(--acc2);border-radius:12px;padding:14px 18px;margin:12px 0}
+.insight ul{margin:6px 0 0;padding-left:20px}.insight li{margin:4px 0}
+.lap{display:grid;grid-template-columns:44px 54px 1fr 46px;gap:8px;align-items:center;font-size:14px;padding:3px 0}
+.lap .bar{height:14px;border-radius:4px;background:var(--ink)}
+.lap .bar.slow{background:var(--acc)}
+.lap .n{color:var(--mute)}.lap .hr{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+.fig.sm{min-height:180px}
+@media(max-width:600px){.lapsum{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.back{background:none;border:0;color:var(--mute);font:700 15px 'Noto Sans KR';cursor:pointer;padding:10px 0;min-height:44px}
+@media(max-width:820px){.bibs{grid-template-columns:repeat(2,minmax(0,1fr))}.form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){nav{margin-left:0;width:100%}nav a{flex:1;justify-content:center;padding:8px 4px;font-size:14px}.sync{text-align:left}.prs{grid-template-columns:1fr}.form{grid-template-columns:1fr}.wk{grid-template-columns:1fr;gap:8px}.race{grid-template-columns:auto 1fr}.race .go{display:none}table{font-size:13px}.hide-m{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <div class="logo"><i></i>내 러닝 기록장</div>
+  <nav><a href="#records" data-v="records">기록</a><a href="#races" data-v="races">대회·훈련</a><a href="#photos" data-v="photos">기록증</a><a href="#settings" data-v="settings">설정</a></nav>
+  <button class="sync" id="sync" type="button">불러오는 중…</button>
+</div></header>
+
+<main>
+<!-- 기록 -->
+<section id="v-records">
+  <div id="nextRace"></div>
+  <h1 id="recTitle">달린 기록을 한눈에</h1>
+  <p class="sub" id="recSub">가민 커넥트에서 내려받은 기록 파일(CSV)을 넣으면 여기에 모여요.</p>
+  <div class="row">
+    <label class="btn pri" style="margin:0;display:inline-flex;align-items:center">가민 기록 파일 넣기<input type="file" id="csv" accept=".csv,text/csv" class="hide"></label>
+    <button class="btn" id="addRunBtn">직접 입력</button>
+  </div>
+  <details class="help"><summary>가민 기록 파일(CSV)은 어떻게 받나요?</summary>
+    <ol>
+      <li>PC 브라우저로 <b>connect.garmin.com</b> 에 로그인해요.</li>
+      <li>왼쪽 메뉴 <b>활동 → 모든 활동</b> 으로 가요. (위쪽에서 종류를 <b>러닝</b>으로 골라두면 편해요)</li>
+      <li>목록을 <b>아래로 끝까지 스크롤</b>해서 옛날 기록까지 다 펼쳐요. 화면에 펼쳐진 기록만 저장되거든요.</li>
+      <li>오른쪽 위 <b>CSV 내보내기</b>를 눌러 파일을 받아요.</li>
+      <li>이 화면의 <b>가민 기록 파일 넣기</b>로 그 파일을 골라요. 같은 기록은 두 번 들어가지 않으니 다음부턴 최근 것만 받아 넣어도 돼요.</li>
+    </ol>
+    <p style="margin:8px 0 0">넣은 뒤 목록에서 <b>제목</b>을 누르면 그 러닝의 모든 수치를 볼 수 있어요.</p>
+    <p style="margin:8px 0 0"><b>대회 하나를 자세히 보고 싶다면</b> — 가민 커넥트에서 그 러닝을 열고 오른쪽 위 톱니바퀴 → <b>스플릿 내보내기(CSV)</b>로 받은 <b>1km 구간 파일</b>을 같은 버튼으로 넣어 보세요. 어느 대회였는지 골라 주면 구간 분석이 붙어요.</p>
+  </details>
+  <div id="lapPanel" class="card hide" style="margin:12px 0"></div>
+  <div id="runForm" class="card hide" style="margin:12px 0">
+    <div class="form">
+      <div><label for="rfDate">날짜</label><input type="date" id="rfDate"></div>
+      <div><label for="rfKm">거리 (km)</label><input type="number" id="rfKm" step="0.01" min="0" inputmode="decimal" placeholder="10.0"></div>
+      <div><label for="rfTime">시간 (시:분:초)</label><input id="rfTime" placeholder="0:52:30"></div>
+      <div class="full"><label for="rfTitle">메모 (선택)</label><input id="rfTitle" placeholder="한강 저녁런"></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="rfSave">저장</button><button class="btn ghost" id="rfCancel">닫기</button></div>
+  </div>
+
+  <div class="bibs" id="bibs"></div>
+  <div class="card"><div class="row" style="justify-content:space-between"><b>최근 12개월 달린 거리</b><span class="note" id="chartNote"></span></div><div class="fig"><svg id="chart" role="img" aria-label="월별 달린 거리"></svg></div></div>
+
+  <h2>나의 최고 기록</h2>
+  <div class="prs" id="prs"></div>
+  <p class="note">해당 거리 근처(±5%)로 달린 기록 중 가장 빠른 것과, 대회 결과로 입력한 기록을 함께 봐요.</p>
+
+  <h2>최근 러닝</h2>
+  <div class="row" style="margin-bottom:8px"><input id="q" placeholder="제목·날짜로 찾기 (예: 2025-10, 한강)" style="max-width:360px"></div>
+  <div class="scroll"><table><thead><tr><th>날짜</th><th>제목</th><th class="r">거리</th><th class="r">시간</th><th class="r">페이스</th><th class="r hide-m">심박</th><th></th></tr></thead><tbody id="runs"></tbody></table></div>
+  <div class="row" style="margin-top:12px"><button class="btn ghost hide" id="more">더 보기</button></div>
+</section>
+
+<!-- 대회·훈련 -->
+<section id="v-races" class="hide">
+  <div id="raceList">
+    <h1>대회와 훈련계획</h1>
+    <p class="sub">나갈 대회를 넣으면 오늘부터 대회 날까지 주차별 훈련표를 만들어 드려요.</p>
+    <button class="btn pri" id="addRaceBtn">대회 추가</button>
+    <div id="raceForm" class="card hide" style="margin:14px 0"></div>
+    <h2>다가오는 대회</h2><div class="races" id="upRaces"></div>
+    <h2>지난 대회</h2><div class="races" id="pastRaces"></div>
+  </div>
+  <div id="raceDetail" class="hide"></div>
+</section>
+
+<!-- 러닝 상세 -->
+<section id="v-run" class="hide"></section>
+<!-- 설정 -->
+<section id="v-settings" class="hide"></section>
+
+<!-- 기록증 -->
+<section id="v-photos" class="hide">
+  <h1>포토 기록증 모음</h1>
+  <p class="sub">대회마다 받은 기록증과 사진을 모아 둬요. 대회 화면에서도 올릴 수 있어요.</p>
+  <div class="row" style="margin-bottom:16px">
+    <select id="phRace" style="max-width:320px"></select>
+    <label class="btn pri" style="margin:0;display:inline-flex;align-items:center">사진 올리기<input type="file" id="phFile" accept="image/*" multiple class="hide"></label>
+  </div>
+  <div class="gal" id="gal"></div>
+</section>
+</main>
+
+<div class="lb" id="lb"><img id="lbImg" alt=""><div class="row"><span id="lbCap" style="color:#fff;font-weight:700"></span><button class="btn sm" id="lbDel">삭제</button><button class="btn sm" id="lbClose">닫기</button></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY=864e5,WEEK=7*DAY;
+let S={runs:[],races:[],updatedAt:0};
+let showN=20;
+
+/* ---------- 설정 ---------- */
+const LKEY='myrun-v1',SKEY='myrun-settings',TKEY='myrun-token';
+const CFG={clientId:'',gptKey:'',gptModel:'gpt-5.5'};
+try{Object.assign(CFG,JSON.parse(localStorage.getItem(SKEY)||'{}'))}catch(e){}
+if(window.APP_CONFIG&&APP_CONFIG.googleClientId)CFG.clientId=APP_CONFIG.googleClientId;
+function saveCfg(){try{localStorage.setItem(SKEY,JSON.stringify(CFG))}catch(e){}}
+
+/* ---------- 이 기기 저장 ---------- */
+function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY)||'null');if(j)S=j}catch(e){}S.runs=S.runs||[];S.races=S.races||[];S.updatedAt=S.updatedAt||0}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast('이 기기 저장 공간이 부족해요')}}
+function touch(){S.updatedAt=Date.now();saveLocal();schedulePush()}
+async function saveRaces(){touch()}
+async function saveRuns(){touch()}
+
+/* ---------- 구글 드라이브 ---------- */
+// 내 구글 드라이브의 "내 러닝 기록장" 폴더에 data.json(기록), settings.json(GPT 키), 사진을 저장해요.
+const SCOPE='https://www.googleapis.com/auth/drive.file';
+const DAPI='https://www.googleapis.com/drive/v3/files',UAPI='https://www.googleapis.com/upload/drive/v3/files';
+const FOLDER='내 러닝 기록장';
+const G={token:null,exp:0,tc:null,folder:null,dataId:null,setId:null,lastPull:0};
+try{const t=JSON.parse(localStorage.getItem(TKEY)||'null');if(t&&t.exp>Date.now()+60000){G.token=t.token;G.exp=t.exp}}catch(e){}
+const online=()=>!!(G.token&&G.exp>Date.now()+30000);
+function getToken(){return new Promise((res,rej)=>{
+  if(online())return res(G.token);
+  if(!CFG.clientId)return rej({code:'no_client'});
+  if(!(window.google&&google.accounts&&google.accounts.oauth2))return rej({code:'no_gis'});
+  try{
+    G.tc=google.accounts.oauth2.initTokenClient({client_id:CFG.clientId,scope:SCOPE,
+      callback:r=>{if(r.error)return rej({code:r.error});G.token=r.access_token;G.exp=Date.now()+(+r.expires_in||3600)*1000;
+        try{localStorage.setItem(TKEY,JSON.stringify({token:G.token,exp:G.exp}));localStorage.setItem('myrun-linked','1')}catch(e){}res(G.token)},
+      error_callback:e=>rej({code:(e&&e.type)||'popup'})});
+    G.tc.requestAccessToken({prompt:localStorage.getItem('myrun-linked')?'':'consent'});
+  }catch(e){rej({code:'gis_error',msg:String(e)})}
+})}
+async function gfetch(url,o={}){
+  if(!online())throw{code:'auth'};
+  o.headers=Object.assign({Authorization:'Bearer '+G.token},o.headers||{});
+  const r=await fetch(url,o);
+  if(r.status===401){G.token=null;try{localStorage.removeItem(TKEY)}catch(e){}throw{code:'auth'}}
+  if(!r.ok)throw{code:'http',status:r.status,msg:await r.text().catch(()=>'')};
+  return r;
+}
+async function findFile(q){const r=await gfetch(DAPI+'?q='+encodeURIComponent(q+' and trashed=false')+'&fields=files(id,name)&orderBy=modifiedTime desc&pageSize=5');return(await r.json()).files[0]||null}
+async function ensureFolder(){
+  if(G.folder)return G.folder;
+  let f=await findFile(`name='${FOLDER}' and mimeType='application/vnd.google-apps.folder'`);
+  if(!f){const r=await gfetch(DAPI+'?fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:FOLDER,mimeType:'application/vnd.google-apps.folder'})});f=await r.json()}
+  return G.folder=f.id;
+}
+async function createFile(name,blob){
+  const folder=await ensureFolder();
+  const fd=new FormData();
+  fd.append('metadata',new Blob([JSON.stringify({name,parents:[folder],mimeType:blob.type})],{type:'application/json'}));
+  fd.append('file',blob);
+  const r=await gfetch(UAPI+'?uploadType=multipart&fields=id',{method:'POST',body:fd});return(await r.json()).id;
+}
+async function updateFile(id,blob){await gfetch(UAPI+'/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':blob.type},body:blob})}
+async function fileIdOf(name){const folder=await ensureFolder();const f=await findFile(`name='${name}' and '${folder}' in parents`);return f&&f.id}
+async function readJSON(id){const r=await gfetch(DAPI+'/'+id+'?alt=media');return r.json()}
+const jblob=o=>new Blob([JSON.stringify(o)],{type:'application/json'});
+
+let pushT=null,syncing=false,syncState='local';
+function schedulePush(){clearTimeout(pushT);if(online())pushT=setTimeout(push,1200);else setSync(CFG.clientId?(localStorage.getItem('myrun-linked')?'off':'local'):'setup')}
+async function push(){
+  if(!online()){setSync('off');return}
+  if(syncing){schedulePush();return}
+  syncing=true;setSync('busy');
+  try{
+    if(!G.dataId)G.dataId=await fileIdOf('data.json');
+    if(G.dataId)await updateFile(G.dataId,jblob(S));else G.dataId=await createFile('data.json',jblob(S));
+    setSync('ok');
+  }catch(e){setSync(e.code==='auth'?'off':'err')}
+  finally{syncing=false}
+}
+async function pull(){
+  setSync('busy');
+  G.dataId=await fileIdOf('data.json');
+  if(G.dataId){
+    const remote=await readJSON(G.dataId);
+    if((remote.updatedAt||0)>(S.updatedAt||0)){S=remote;S.runs=S.runs||[];S.races=S.races||[];saveLocal();render()}
+    else if((S.updatedAt||0)>(remote.updatedAt||0)){syncing=false;await push()}
+  }else if(S.runs.length||S.races.length){await push()}
+  G.setId=await fileIdOf('settings.json');
+  if(G.setId){const st=await readJSON(G.setId);if(st.gptKey&&!CFG.gptKey){CFG.gptKey=st.gptKey;if(st.gptModel)CFG.gptModel=st.gptModel;saveCfg()}}
+  G.lastPull=Date.now();setSync('ok');renderSettings();hydrateImgs();
+}
+async function pushSettings(){
+  if(!online())return false;
+  const b=jblob({gptKey:CFG.gptKey,gptModel:CFG.gptModel});
+  if(!G.setId)G.setId=await fileIdOf('settings.json');
+  if(G.setId)await updateFile(G.setId,b);else G.setId=await createFile('settings.json',b);return true;
+}
+async function connect(){
+  if(!CFG.clientId){location.hash='settings';toast('먼저 설정에서 구글 연결 준비를 해 주세요');return}
+  try{await getToken();await pull()}
+  catch(e){setSync(e.code==='auth'?'off':'err');
+    toast(e.code==='no_gis'?'구글 로그인 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요':e.code==='popup_closed'?'로그인 창이 닫혔어요':e.code==='popup_failed_to_open'?'팝업이 막혔어요. 브라우저에서 팝업을 허용해 주세요':e.code==='http'&&e.status===403?'드라이브 권한이 없어요. 설정 안내의 2단계(Drive API 사용)를 확인해 주세요':'구글 드라이브에 연결하지 못했어요 ('+(e.status||e.code)+')')}
+  renderSettings();
+}
+function disconnect(){try{if(G.token&&window.google)google.accounts.oauth2.revoke(G.token,()=>{})}catch(e){}
+  G.token=null;G.folder=G.dataId=G.setId=null;try{localStorage.removeItem(TKEY);localStorage.removeItem('myrun-linked')}catch(e){}setSync('local');renderSettings();toast('구글 드라이브 연결을 끊었어요. 이 기기 기록은 그대로 있어요')}
+const SYNC_TXT={local:'이 기기에만 저장 중 · 눌러서 구글 드라이브 연결',setup:'설정에서 구글 연결을 준비해 주세요',off:'구글 드라이브 연결이 쉬는 중 · 눌러서 다시 연결',busy:'구글 드라이브와 맞추는 중…',ok:'구글 드라이브와 동기화됨',err:'동기화에 실패했어요 · 눌러서 다시 시도'};
+function setSync(s){syncState=s;const e=$('#sync');e.textContent=SYNC_TXT[s]||s;e.dataset.s=s}
+$('#sync').onclick=()=>{if(syncState==='setup'){location.hash='settings';return}if(syncState==='ok'||syncState==='busy'){if(online())pull().catch(()=>setSync('err'));return}connect()};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&online()&&Date.now()-G.lastPull>60000)pull().catch(()=>setSync('err'))});
+
+function init(){
+  loadLocal();render();route();
+  if(online())pull().catch(e=>setSync(e.code==='auth'?'off':'err'));
+  else setSync(!CFG.clientId?'setup':localStorage.getItem('myrun-linked')?'off':'local');
+  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ---------- 계산 도우미 ---------- */
+const fmtT=s=>{if(!s&&s!==0)return'–';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0')};
+const fmtP=p=>{if(!p||!isFinite(p))return'–';p=Math.round(p);return Math.floor(p/60)+"'"+String(p%60).padStart(2,'0')+'"'};
+const parseT=t=>{if(!t)return 0;t=String(t).trim();if(!/\d/.test(t))return 0;const p=t.split(':').map(x=>parseFloat(x)||0);let s=0;for(const v of p)s=s*60+v;if(p.length===1)s=p[0]*60;return s};
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dateOf=s=>new Date(s.slice(0,10)+'T00:00:00');
+const today0=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const monday=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const md=d=>(d.getMonth()+1)+'/'+d.getDate();
+const DISTS=[{k:5,n:'5K'},{k:10,n:'10K'},{k:21.0975,n:'하프'},{k:42.195,n:'풀코스'}];
+const distName=k=>{const f=DISTS.find(x=>Math.abs(x.k-k)<.05);return f?f.n:(+k).toFixed(1)+'km'};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600)}
+
+/* ---------- CSV 가져오기 ---------- */
+function csvRows(text){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===','){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}
+    else f+=c}
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+function importCSV(text){
+  text=text.replace(/^﻿/,'');
+  const rows=csvRows(text);if(rows.length<2)return toast('기록을 찾지 못했어요');
+  const h=rows[0].map(x=>x.trim());
+  const find=(...re)=>{for(const r of re){const i=h.findIndex(x=>r.test(x));if(i>=0)return i}return -1};
+  const iT=find(/^활동 ?유형$/,/^Activity Type$/i),iD=find(/^날짜$/,/^Date$/i),iTi=find(/^제목$/,/^Title$/i),
+        iK=find(/^거리$/,/^Distance$/i),iS=find(/^시간$/,/^Time$/i,/^경과 시간$/,/^Elapsed Time$/i),iH=find(/^평균 ?심박/,/^Avg HR$/i);
+  if(iD<0||iK<0||iS<0)return toast('가민 CSV 형식이 아닌 것 같아요 (날짜·거리·시간 칸이 없어요)');
+  const have=new Map(S.runs.map(r=>[r.id,r]));let add=0,upd=0;
+  for(const r of rows.slice(1)){
+    const type=iT>=0?r[iT]||'':'';
+    if(type&&!/러닝|달리기|run|트레드밀|treadmill|트랙|track|트레일|trail/i.test(type))continue;
+    const ds=(r[iD]||'').trim();const m=ds.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})(?:\D+(\d{1,2}):(\d{2}))?/);if(!m)continue;
+    let hh=+(m[4]||0);if(/오후|PM/i.test(ds)&&hh<12)hh+=12;
+    const d=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}T${String(hh).padStart(2,'0')}:${m[5]||'00'}`;
+    const km=parseFloat(String(r[iK]).replace(/,/g,''));const s=parseT(r[iS]);
+    if(!(km>0)||!(s>0))continue;
+    const x={};h.forEach((k,i)=>{const v=(r[i]||'').trim();if(k&&v&&v!=='--')x[k]=v});
+    const id=d+'|'+km.toFixed(2);const title=(iTi>=0?r[iTi]:'')||type||'러닝';
+    if(have.has(id)){const o=have.get(id);if(!o.x){o.x=x;upd++}continue}
+    const twin=S.runs.find(o=>!o.x&&o.d.slice(0,10)===d.slice(0,10)&&Math.abs(o.km-km)<.3); // 구간 파일·직접 입력으로 먼저 생긴 기록과 합치기
+    if(twin){Object.assign(twin,{id,d,km:+km.toFixed(2),s:Math.round(s),hr:parseInt(r[iH])||twin.hr||0,t:title,x});have.set(id,twin);upd++;continue}
+    const run={id,d,km:+km.toFixed(2),s:Math.round(s),hr:parseInt(r[iH])||0,t:title,x};
+    S.runs.push(run);have.set(id,run);add++;
+  }
+  S.runs.sort((a,b)=>b.d.localeCompare(a.d));
+  saveRuns();render();
+  toast(add||upd?`새 기록 ${add}개${upd?`, 자세한 수치 보강 ${upd}개`:''}`:'새로 넣을 기록이 없어요 (이미 다 들어 있어요)');
+}
+$('#csv').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const t=rd.result.replace(/^﻿/,'');const h=(csvRows(t.slice(0,2000))[0]||[]).map(x=>x.trim());if(/^(랩|Laps?|스플릿|Split)$/i.test(h[0]||''))importLaps(t);else importCSV(t)};rd.readAsText(f,'utf-8');e.target.value=''});
+
+const kName=k=>k>40?'풀':k>20?'하프':k+'km';
+const isDup=(d,km)=>S.runs.some(r=>r.d.slice(0,10)===d.slice(0,10)&&Math.abs(r.km-km)<.3);
+const stdDist=km=>{const f=DISTS.find(x=>Math.abs(x.k-km)/x.k<.06);return f?f.k:null};
+
+/* ---------- 구간(랩) 파일 ---------- */
+let pendingLap=null;
+function importLaps(text){
+  const rows=csvRows(text);const h=rows[0].map(x=>x.trim());
+  const find=(...re)=>{for(const r of re){const i=h.findIndex(x=>r.test(x));if(i>=0)return i}return -1};
+  const I={t:find(/^시간$/,/^Time$/i),k:find(/^거리/,/^Distance/i),hr:find(/^평균 심박/,/^Avg HR/i),mhr:find(/^최대 ?심박/,/^Max HR/i),
+    cad:find(/^평균 (달리기 )?케이던스/,/^Avg Run Cadence/i),st:find(/^평균 보폭/,/^Avg Stride/i),gct:find(/^평균 지면 접촉/,/^Avg Ground Contact Time/i),
+    vo:find(/^평균 수직 진동/,/^Avg Vertical Oscillation/i),pw:find(/^평균 파워/,/^Avg Power/i),up:find(/^총 상승/,/^Total Ascent/i),tmp:find(/^평균 온도/,/^Avg Temp/i),cal:find(/^칼로리/,/^Calories/i)};
+  if(I.t<0||I.k<0)return toast('구간 파일에서 시간·거리 칸을 찾지 못했어요');
+  const num=(r,i)=>{if(i<0)return 0;const v=parseFloat(String(r[i]||'').replace(/,/g,''));return isFinite(v)?v:0};
+  const laps=[];let sum=null;
+  for(const r of rows.slice(1)){
+    const L={km:num(r,I.k),s:Math.round(parseT(r[I.t])*10)/10,hr:num(r,I.hr),mhr:num(r,I.mhr),cad:num(r,I.cad),st:num(r,I.st),gct:num(r,I.gct),vo:num(r,I.vo),pw:num(r,I.pw),up:num(r,I.up),tmp:num(r,I.tmp),cal:num(r,I.cal)};
+    if(/요약|Summary/i.test(r[0]||''))sum=L;else if(L.km>0&&L.s>0)laps.push(L);
+  }
+  if(!laps.length)return toast('구간 기록을 찾지 못했어요');
+  if(!sum){const km=laps.reduce((a,l)=>a+l.km,0),s=laps.reduce((a,l)=>a+l.s,0);sum={km,s,hr:Math.round(laps.reduce((a,l)=>a+l.hr*l.s,0)/s)}}
+  pendingLap={laps,sum};showLapPanel('');
+}
+function showLapPanel(){
+  const {sum}=pendingLap;const sk=stdDist(sum.km);const t0=today0();
+  const mine=S.races.filter(c=>dateOf(c.date)<=t0&&(!sk||Math.abs(c.km-sk)<.1)).sort((a,b)=>b.date.localeCompare(a.date));
+  const el=$('#lapPanel');el.classList.remove('hide');
+  el.innerHTML=`<b style="font-size:18px">구간 기록 ${pendingLap.laps.length}개를 읽었어요</b>
+   <div class="lapsum"><div><b>${sum.km.toFixed(2)}km</b><span>거리</span></div><div><b>${fmtT(sum.s)}</b><span>기록</span></div><div><b>${fmtP(sum.s/sum.km)}</b><span>평균 페이스</span></div><div><b>${sum.hr||'–'}</b><span>평균 심박</span></div></div>
+   <p style="margin:6px 0">이 파일엔 날짜가 없어서, 어느 대회였는지 알려 주세요.${sk?` 거리로 보면 <b>${distName(sk)}</b> 대회 같아요.`:''}</p>
+   ${mine.length?`<div class="cands">${mine.map(c=>`<button class="cand" data-mine="${esc(c.id)}"><span><b>${esc(c.name)}</b><br><span class="note">${esc(c.date)} · ${distName(c.km)}</span></span><span class="tag">내 대회</span></button>`).join('')}</div><p class="note" style="margin:10px 0 4px">목록에 없으면 인터넷에서 찾아보세요.</p>`:''}
+   <div class="row" style="flex-wrap:nowrap"><input id="lapQ" placeholder="대회 이름 (예: MBN 서울마라톤 2026)"><button class="btn" id="lapFind" style="flex:none">찾기</button></div>
+   <div id="lapRes"></div>
+   <details style="margin-top:10px"><summary class="note" style="cursor:pointer">직접 입력할게요</summary>
+     <div class="form" style="margin-top:8px"><div><label for="lapN">대회 이름</label><input id="lapN"></div><div><label for="lapD">날짜</label><input type="date" id="lapD"></div><div style="align-self:end"><button class="btn pri" id="lapManual">이 대회로 연결</button></div></div></details>
+   <div class="row" style="margin-top:12px"><button class="btn ghost" id="lapCancel">취소</button></div>`;
+  const go=()=>raceSearchUI($('#lapQ').value,$('#lapRes'),x=>{if(!x.date)return toast('날짜를 못 찾은 대회예요. 아래 직접 입력을 써 주세요');attachLaps({name:x.name,date:x.date})});
+  $('#lapFind').onclick=go;$('#lapQ').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+  $('#lapManual').onclick=()=>{const n=$('#lapN').value.trim(),d=$('#lapD').value;if(!n||!d)return toast('대회 이름과 날짜를 넣어 주세요');attachLaps({name:n,date:d})};
+  $('#lapCancel').onclick=()=>{pendingLap=null;el.classList.add('hide')};
+}
+function attachLaps(target){
+  const {laps,sum}=pendingLap;let c;
+  if(target.id)c=S.races.find(x=>x.id===target.id);
+  else{c=S.races.find(x=>x.name===target.name&&x.date===target.date);
+    if(!c){c={id:'r'+Date.now().toString(36),name:target.name,date:target.date,km:stdDist(sum.km)||+sum.km.toFixed(1),goal:'',result:'',days:4,photos:[]};S.races.push(c)}}
+  c.laps=laps;c.lapSum=sum;if(!c.result)c.result=fmtT(sum.s);
+  if(!isDup(c.date,sum.km)){S.runs.push({id:c.date+'T07:30|'+sum.km.toFixed(2),d:c.date+'T07:30',km:+sum.km.toFixed(2),s:Math.round(sum.s),hr:Math.round(sum.hr)||0,t:c.name});S.runs.sort((a,b)=>b.d.localeCompare(a.d));saveRuns([c.date.slice(0,4)])}
+  saveRaces();pendingLap=null;$('#lapPanel').classList.add('hide');toast(`${c.name} 기록으로 연결했어요`);openRace(c.id);
+}
+$('#lapPanel').addEventListener('click',e=>{const b=e.target.closest('[data-mine]');if(b&&pendingLap)attachLaps({id:b.dataset.mine})});
+
+/* ---------- 대회 인터넷 검색 (GPT + 웹 검색) ---------- */
+const RACE_ERR={no_key:'GPT API 키가 아직 없어요. 설정 탭에서 넣어 주세요.',bad_key:'GPT API 키가 맞지 않아요. 설정에서 다시 확인해 주세요.',
+  quota:'GPT 사용 한도에 걸렸어요. OpenAI 계정의 결제(충전) 상태를 확인해 주세요.',model:'설정의 GPT 모델 이름을 이 키로 쓸 수 없어요. 설정에서 모델을 바꿔 보세요.',
+  invalid_json:'검색 결과를 정리하지 못했어요. 다시 찾기를 눌러 주세요.',net:'인터넷 연결을 확인해 주세요.'};
+async function findRaces(q){
+  if(!CFG.gptKey)throw{code:'no_key'};
+  const prompt=`웹 검색으로 "${q}" 러닝(마라톤) 대회를 찾아줘. 오늘 날짜는 ${ymd(new Date())}.
+가장 맞는 대회 후보를 최대 4개, JSON 배열로만 답해. 설명 문장은 쓰지 마.
+각 항목: {"name":"공식 대회명(연도 포함)","date":"YYYY-MM-DD, 확인 못 하면 빈 문자열","distances":["풀","하프","10km","5km" 중 이 대회에 있는 것],"place":"출발 장소","start":"HH:MM 출발 시각","url":"근거 페이지 주소","note":"접수 기간 등 한 줄"}
+규칙: 확인 안 된 정보는 지어내지 말고 빈 문자열. 연도가 다른 회차는 따로. 질문과 가장 맞는 것을 맨 앞에. 못 찾으면 [].`;
+  let r;
+  try{r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CFG.gptKey},
+    body:JSON.stringify({model:CFG.gptModel||'gpt-5.5',tools:[{type:'web_search'}],input:prompt})})}catch(e){throw{code:'net'}}
+  if(!r.ok){const t=await r.text().catch(()=>'');throw{code:r.status===401?'bad_key':r.status===429?'quota':(r.status===400||r.status===404)&&/model/i.test(t)?'model':'http',status:r.status,msg:t.slice(0,200)}}
+  const j=await r.json();
+  let text=j.output_text||'';
+  if(!text)for(const o of j.output||[])if(o.type==='message')for(const c of o.content||[])if(c.type==='output_text')text+=c.text;
+  const m=text.match(/\[[\s\S]*\]/);let arr;
+  try{arr=JSON.parse(m?m[0]:text)}catch(e){throw{code:'invalid_json'}}
+  const M={'풀':42.195,'하프':21.0975,'10km':10,'5km':5};
+  return (Array.isArray(arr)?arr:[]).filter(x=>x&&x.name).map(x=>({name:String(x.name),date:/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')?x.date:'',ks:(x.distances||[]).map(d=>M[String(d).replace(/\s/g,'').replace(/^10k$/i,'10km').replace(/^5k$/i,'5km')]).filter(Boolean),place:String(x.place||''),start:String(x.start||''),url:/^https?:\/\//.test(x.url||'')?x.url:'',note:String(x.note||'')}));
+}
+async function raceSearchUI(q,box,onPick){
+  q=(q||'').trim();if(q.length<2){toast('대회 이름을 두 글자 이상 써 주세요');return}
+  box.innerHTML='<div class="note" style="padding:10px 0">GPT가 인터넷에서 찾는 중… (10~40초쯤 걸려요)</div>';
+  try{
+    const list=await findRaces(q);
+    if(!list.length){box.innerHTML='<div class="empty" style="padding:18px">맞는 대회를 못 찾았어요. 연도나 지역을 붙여서 다시 찾아보세요. (예: "MBN 서울마라톤 2026")</div>';return}
+    box.innerHTML=`<div class="cands">${list.map((x,i)=>`<div class="cand" style="cursor:default"><span><b>${esc(x.name)}</b><br><span class="note">${x.date?esc(x.date):'날짜 확인 안 됨'}${x.start?' '+esc(x.start):''}${x.place?' · '+esc(x.place):''}${x.ks.length?' · '+x.ks.map(kName).join(' · '):''}${x.note?'<br>'+esc(x.note):''}${x.url?`<br><a href="${esc(x.url)}" target="_blank" rel="noopener" style="color:var(--acc)">근거 페이지 열기</a>`:''}</span></span><button class="btn sm pri" data-pick="${i}" style="flex:none">이 대회</button></div>`).join('')}</div><p class="note">GPT가 검색해서 정리한 거라 가끔 틀릴 수 있어요. 날짜는 근거 페이지에서 한 번 확인해 주세요.</p>`;
+    box.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>onPick(list[+b.dataset.pick]));
+  }catch(e){
+    const code=e&&e.code;
+    box.innerHTML=`<div class="insight">${esc(RACE_ERR[code]||('검색 중 문제가 생겼어요'+(e&&e.status?' ('+e.status+')':'')+'. 잠시 뒤 다시 해 주세요.'))}${code==='no_key'||code==='bad_key'||code==='model'?' <a href="#settings" style="color:var(--acc)">설정으로 가기</a>':''}</div>`;
+  }
+}
+
+/* 직접 입력 */
+$('#addRunBtn').onclick=()=>{$('#runForm').classList.toggle('hide');$('#rfDate').value=ymd(new Date())};
+$('#rfCancel').onclick=()=>$('#runForm').classList.add('hide');
+$('#rfSave').onclick=()=>{
+  const dt=$('#rfDate').value,km=parseFloat($('#rfKm').value),s=parseT($('#rfTime').value);
+  if(!dt||!(km>0)||!(s>0))return toast('날짜, 거리, 시간을 모두 넣어 주세요');
+  const d=dt+'T12:00',id=d+'|'+km.toFixed(2);
+  if(S.runs.some(r=>r.id===id))return toast('같은 기록이 이미 있어요');
+  S.runs.push({id,d,km:+km.toFixed(2),s:Math.round(s),hr:0,t:$('#rfTitle').value.trim()||'러닝',m:1});
+  S.runs.sort((a,b)=>b.d.localeCompare(a.d));saveRuns([dt.slice(0,4)]);
+  ['#rfKm','#rfTime','#rfTitle'].forEach(x=>$(x).value='');$('#runForm').classList.add('hide');render();toast('기록을 저장했어요');
+};
+
+/* ---------- 기록 화면 ---------- */
+function bestFor(k){
+  let best=null;
+  for(const r of S.runs){if(Math.abs(r.km-k)/k<=.05){const t=r.s/r.km*k;if(!best||t<best.t)best={t,d:r.d,src:'훈련'}}}
+  for(const c of S.races){if(c.result&&Math.abs(c.km-k)<.1){const t=parseT(c.result);if(t&&(!best||t<best.t))best={t,d:c.date,src:c.name}}}
+  return best;
+}
+function renderRecords(){
+  const runs=S.runs,now=new Date(),y=String(now.getFullYear()),ym=ymd(now).slice(0,7);
+  const sum=a=>a.reduce((x,r)=>x+r.km,0);
+  const yr=runs.filter(r=>r.d.startsWith(y)),mo=runs.filter(r=>r.d.startsWith(ym));
+  const last30=runs.filter(r=>now-dateOf(r.d)<30*DAY);
+  const pace30=last30.length?last30.reduce((x,r)=>x+r.s,0)/sum(last30):0;
+  $('#recTitle').textContent=runs.length?`올해 ${sum(yr).toFixed(0)}km를 달렸어요`:'달린 기록을 한눈에';
+  $('#recSub').textContent=runs.length?`지금까지 모은 러닝 ${runs.length}회 · 첫 기록 ${runs[runs.length-1].d.slice(0,10)}`:'가민 커넥트에서 내려받은 기록 파일(CSV)을 넣으면 여기에 모여요.';
+  $('#bibs').innerHTML=[
+    ['hot',sum(mo).toFixed(1),'km','이번 달 거리'],
+    ['',sum(yr).toFixed(0),'km',y+'년 누적'],
+    ['',mo.length,'회','이번 달 러닝'],
+    ['',fmtP(pace30),'/km','최근 30일 평균 페이스']
+  ].map(([c,v,u,k])=>`<div class="bib ${c}"><div class="v num">${v}<small>${u}</small></div><div class="k">${k}</div></div>`).join('');
+  $('#prs').innerHTML=DISTS.slice(0,3).map(x=>{const b=bestFor(x.k);return`<div class="pr"><div class="k">${x.n}</div><div class="v num">${b?fmtT(b.t):'–'}</div><div class="k">${b?esc(b.d.slice(0,10))+' · '+esc(b.src):'아직 기록이 없어요'}</div></div>`}).join('');
+  // 다음 대회
+  const t0=today0();const nx=S.races.filter(c=>dateOf(c.date)>=t0).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  $('#nextRace').innerHTML=nx?`<div class="next" data-race="${esc(nx.id)}" role="button" tabindex="0"><span class="d num">D-${Math.round((dateOf(nx.date)-t0)/DAY)||'DAY'}</span><span><b>${esc(nx.name)}</b><br><span style="opacity:.75;font-size:14px">${esc(nx.date)} · ${distName(nx.km)} · 훈련표 보기 →</span></span></div>`:'';
+  renderRunTable();drawChart();
+}
+function renderRunTable(){
+  const q=$('#q').value.trim().toLowerCase();
+  const list=S.runs.filter(r=>!q||r.d.includes(q)||String(r.t).toLowerCase().includes(q));
+  $('#runs').innerHTML=list.length?list.slice(0,showN).map(r=>`<tr><td style="white-space:nowrap">${r.d.slice(2,10).replace(/-/g,'.')}</td><td><button class="lnk" data-run="${esc(r.id)}">${esc(r.t)}</button></td><td class="r num" style="font-weight:800">${r.km.toFixed(2)}</td><td class="r">${fmtT(r.s)}</td><td class="r">${fmtP(r.s/r.km)}</td><td class="r hide-m">${r.hr||'–'}</td><td class="r"><button class="btn sm ghost" data-del="${esc(r.id)}" aria-label="삭제">✕</button></td></tr>`).join(''):`<tr><td colspan="7"><div class="empty">${S.runs.length?'찾는 기록이 없어요':'아직 기록이 없어요. 위의 <b>가민 기록 파일 넣기</b>로 시작해 보세요.'}</div></td></tr>`;
+  $('#more').classList.toggle('hide',list.length<=showN);
+}
+$('#q').addEventListener('input',()=>{showN=20;renderRunTable()});
+$('#more').onclick=()=>{showN+=30;renderRunTable()};
+$('#runs').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;
+  if(b.dataset.armed){const r=S.runs.find(x=>x.id===b.dataset.del);S.runs=S.runs.filter(x=>x.id!==b.dataset.del);saveRuns([r.d.slice(0,4)]);render();toast('기록을 지웠어요')}
+  else{b.dataset.armed=1;b.textContent='지울까요?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent='✕'}},3000)}});
+
+const chart=$('#chart');
+function drawChart(){
+  const W=chart.clientWidth,H=chart.clientHeight;if(!W)return;
+  const now=new Date();const ms=[];
+  for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);ms.push({k:ymd(d).slice(0,7),m:d.getMonth()+1,km:0})}
+  for(const r of S.runs){const f=ms.find(x=>x.k===r.d.slice(0,7));if(f)f.km+=r.km}
+  const max=Math.max(20,...ms.map(x=>x.km));const top=Math.ceil(max/50)*50||50;
+  const pl=W<520?30:40,pb=28,pt=24,bw=(W-pl-8)/12;
+  const sy=v=>H-pb-(v/top)*(H-pb-pt);
+  let g='';
+  for(let i=0;i<=4;i++){const v=top*i/4,y=sy(v);g+=`<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-6}" y="${y+4}" text-anchor="end" font-size="12" fill="var(--mute)">${Math.round(v)}</text>`}
+  ms.forEach((x,i)=>{const X=pl+i*bw+bw*.18,w=bw*.64,y=sy(x.km);const cur=i===11;
+    g+=`<rect x="${X}" y="${y}" width="${w}" height="${Math.max(0,H-pb-y)}" rx="4" fill="${cur?'var(--acc)':'var(--ink)'}"/>`;
+    if(x.km>0&&(W>=520||cur))g+=`<text x="${X+w/2}" y="${y-6}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${Math.round(x.km)}</text>`;
+    if(W>=520||i%2===1)g+=`<text x="${X+w/2}" y="${H-8}" text-anchor="middle" font-size="12" fill="var(--mute)">${x.m}월</text>`});
+  chart.innerHTML=g;
+  $('#chartNote').textContent='단위 km · 주황색이 이번 달';
+}
+new ResizeObserver(drawChart).observe(chart);
+
+/* ---------- 훈련계획 ---------- */
+function recentWeekly(){const n=new Date();const a=S.runs.filter(r=>n-dateOf(r.d)<28*DAY);return a.reduce((x,r)=>x+r.km,0)/4}
+function estPace(race){ // 목표 페이스(초/km)
+  const g=parseT(race.goal);if(g)return{p:g/race.km,src:'목표 기록'};
+  const n=new Date();let best=null;
+  for(const r of S.runs){if(r.km>=5&&n-dateOf(r.d)<120*DAY){const t=r.s*Math.pow(race.km/r.km,1.06);if(!best||t<best)best=t}}
+  return best?{p:best/race.km,src:'최근 기록으로 추정한'}:null;
+}
+function buildPlan(race){
+  const k=race.km,days=+race.days||4,rd=dateOf(race.date),rw=monday(rd);
+  let start=monday(today0());let n=Math.round((rw-start)/WEEK)+1;
+  if(n<1)return{weeks:[],note:''};
+  const maxW=k>=21?18:12;let note='';
+  if(n>maxW){start=new Date(rw.getTime()-(maxW-1)*WEEK);n=maxW;note=`대회까지 시간이 넉넉해서 훈련표는 ${ymd(start)}부터 시작해요. 그 전까지는 편하게 꾸준히 달려 두세요.`}
+  const rec=recentWeekly();
+  const base=Math.max(rec,k<=5?12:k<=10?15:k<=21.1?22:30);
+  const peakT=k<=5?25:k<=10?32:k<=21.1?42:55;
+  const taper=k>=21?2:1;
+  const buildN=Math.max(1,n-1-taper);
+  let peak=Math.max(base*1.15,Math.min(peakT,base*Math.pow(1.1,buildN)));
+  const gp=estPace(race);
+  const P=gp?gp.p:0;
+  const pace=(a,b)=>P?`${fmtP(P*a)}${b?'~'+fmtP(P*b):''}/km`:'';
+  const easyP=pace(1.2,1.3)||'대화 가능한 편한 속도';
+  const longCap=k<=5?10:k<=10?14:k<=21.1?19:32;
+  const weeks=[];let vol=base;
+  for(let i=0;i<n;i++){
+    const ws=new Date(start.getTime()+i*WEEK);const raceWeek=i===n-1;const left=n-1-i;
+    let ph,v;
+    if(raceWeek){ph='대회 주';v=peak*.35}
+    else if(left<=taper){ph='테이퍼(줄이기)';v=peak*(left===2?.8:.65)}
+    else{const frac=buildN>1?i/(buildN-1):1;v=base+(peak-base)*frac;if(i>0&&i%4===3)v*=.8;ph=frac<.4?'기초 다지기':frac<.85?'강화':'피크'}
+    v=Math.round(v);
+    const S2=[];
+    if(raceWeek){
+      S2.push({d:'화',t:'가볍게 조깅 + 짧은 질주 4회',km:Math.min(6,Math.round(v*.45)),p:easyP});
+      S2.push({d:'목',t:'가볍게 조깅',km:Math.min(5,Math.round(v*.35)),p:easyP});
+      S2.push({d:['일','월','화','수','목','금','토'][rd.getDay()],t:`대회! ${race.name}`,km:+k.toFixed(1),p:P?`목표 ${fmtP(P)}/km`:'',race:1});
+    }else{
+      const isQ=i%2===0;
+      const long=Math.min(longCap,Math.max(k<=10?6:10,Math.round(v*.32)));
+      const qk=Math.max(5,Math.round(v*.22));
+      let q;
+      if(ph==='기초 다지기')q={t:`빌드업 런 — 조금씩 빨라지게 마무리`,km:qk,p:pace(1.05,1.15)};
+      else if(isQ)q={t:k<=10?`인터벌 — 1km × ${Math.min(6,3+Math.floor(i/3))}회, 사이 2분 조깅`:`인터벌 — 1km × ${Math.min(8,4+Math.floor(i/3))}회, 사이 2분 조깅`,km:qk,p:pace(k<=10?.95:.92)};
+      else q={t:`템포 런 — 워밍업 2km 뒤 ${Math.max(2,qk-3)}km 꾸준히`,km:qk,p:pace(k<=10?1.04:.98)};
+      if(ph.startsWith('테이퍼'))q.t=q.t.replace(/× \d+회/,'× 3회');
+      const rest=Math.max(0,v-long-q.km);const ne=days-2;
+      const ez=ne>0?Math.max(3,Math.round(rest/ne)):0;
+      const map={3:['화','목','일'],4:['화','수','금','일'],5:['월','화','목','금','일'],6:['월','화','수','목','금','일']}[days]||['화','수','금','일'];
+      const list=[];
+      for(let e=0;e<ne;e++)list.push({t:'편하게 달리기',km:ez,p:easyP});
+      list.splice(Math.min(1,list.length)===0?0:(days>=5?1:0),0,{...q,q:1});
+      list.push({t:'장거리 천천히',km:long,p:pace(1.15,1.25)||easyP});
+      list.forEach((s,j)=>S2.push({...s,d:map[j]}));
+      v=S2.reduce((x,s)=>x+s.km,0);
+    }
+    weeks.push({i:i+1,ws,ph,v,s:S2});
+  }
+  return{weeks,note,gp,base:rec};
+}
+
+/* ---------- 대회 화면 ---------- */
+let editId=null;
+function raceForm(c){
+  c=c||{name:'',date:'',km:10,goal:'',days:4,result:''};
+  const opt=DISTS.map(x=>`<option value="${x.k}" ${Math.abs(x.k-c.km)<.05?'selected':''}>${x.n}</option>`).join('')+`<option value="other" ${DISTS.some(x=>Math.abs(x.k-c.km)<.05)?'':'selected'}>기타 거리</option>`;
+  $('#raceForm').innerHTML=`<div class="form">
+    <div class="full"><label for="fN">대회 이름</label><div class="row" style="flex-wrap:nowrap"><input id="fN" autocomplete="off" value="${esc(c.name)}" placeholder="예: 2027 서울마라톤"><button type="button" class="btn" id="fFind" style="flex:none">인터넷에서 찾기</button></div><div class="note">이름을 쓰고 <b>인터넷에서 찾기</b>를 누르면 날짜·종목·출발 장소를 찾아 채워 줘요.</div><div id="fRes"></div></div>
+    <div><label for="fD">대회 날짜</label><input type="date" id="fD" value="${esc(c.date)}"></div>
+    <div><label for="fK">종목</label><select id="fK">${opt}</select></div>
+    <div id="fKoW" class="${DISTS.some(x=>Math.abs(x.k-c.km)<.05)?'hide':''}"><label for="fKo">거리 (km)</label><input type="number" step="0.1" id="fKo" value="${c.km}"></div>
+    <div><label for="fG">목표 기록 (선택)</label><input id="fG" value="${esc(c.goal)}" placeholder="예: 0:55:00"></div>
+    <div><label for="fW">주당 훈련 일수</label><select id="fW">${[3,4,5,6].map(x=>`<option ${+c.days===x?'selected':''} value="${x}">${x}일</option>`).join('')}</select></div>
+    <div><label for="fR">완주 기록 (대회 후에)</label><input id="fR" value="${esc(c.result)}" placeholder="예: 1:58:12"></div>
+  </div><div class="row" style="margin-top:12px"><button class="btn pri" id="fSave">저장</button><button class="btn ghost" id="fCancel">닫기</button></div>`;
+  $('#raceForm').classList.remove('hide');
+  $('#fK').onchange=e=>$('#fKoW').classList.toggle('hide',e.target.value!=='other');
+  $('#fFind').onclick=()=>raceSearchUI($('#fN').value,$('#fRes'),x=>{
+    $('#fN').value=x.name;if(x.date)$('#fD').value=x.date;
+    const pick=[21.0975,10,42.195,5].find(k=>x.ks.includes(k));if(pick){$('#fK').value=String(pick);$('#fKoW').classList.add('hide')}
+    $('#fRes').innerHTML=`<div class="insight" style="margin-top:8px">${esc(x.name)} — ${x.date?esc(x.date):'날짜 확인 필요'}${x.start?' '+esc(x.start)+' 출발':''}${x.place?' · '+esc(x.place):''}<br><span class="note">이 대회 종목: ${x.ks.map(kName).join(' · ')||'확인 안 됨'} — 나갈 종목이 다르면 아래에서 바꿔 주세요.</span></div>`});
+  $('#fN').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#fFind').click()}});
+  $('#fCancel').onclick=()=>{$('#raceForm').classList.add('hide');editId=null};
+  $('#fSave').onclick=()=>{
+    const name=$('#fN').value.trim(),date=$('#fD').value;const kv=$('#fK').value;const km=kv==='other'?parseFloat($('#fKo').value):parseFloat(kv);
+    if(!name||!date||!(km>0))return toast('대회 이름, 날짜, 거리를 넣어 주세요');
+    const goal=$('#fG').value.trim(),result=$('#fR').value.trim();
+    if(goal&&!parseT(goal))return toast('목표 기록은 시:분:초 모양으로 넣어 주세요');
+    const body={name,date,km,goal,result,days:+$('#fW').value};
+    if(editId){Object.assign(S.races.find(x=>x.id===editId),body)}else{S.races.push({id:'r'+Date.now().toString(36),photos:[],...body})}
+    const was=editId;editId=null;$('#raceForm').classList.add('hide');saveRaces();
+    if(was){openRace(was)}else render();toast('대회를 저장했어요');
+  };
+}
+$('#addRaceBtn').onclick=()=>{editId=null;raceForm()};
+function raceCard(c,up){const t0=today0(),dd=Math.round((dateOf(c.date)-t0)/DAY);
+  return`<button class="race ${up?'up':'past'}" data-race="${esc(c.id)}"><span class="dd num">${up?(dd?'D-'+dd:'D-DAY'):(c.result?esc(c.result):'완주')}</span><span><span class="nm">${esc(c.name)}</span><br><span class="meta">${esc(c.date)} · ${distName(c.km)}${c.goal?' · 목표 '+esc(c.goal):''}${(c.photos||[]).length?' · 사진 '+c.photos.length+'장':''}</span></span><span class="go tag">${up?'훈련표':'기록 보기'}</span></button>`}
+function renderRaces(){
+  const t0=today0();const up=S.races.filter(c=>dateOf(c.date)>=t0).sort((a,b)=>a.date.localeCompare(b.date));
+  const past=S.races.filter(c=>dateOf(c.date)<t0).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#upRaces').innerHTML=up.length?up.map(c=>raceCard(c,1)).join(''):'<div class="empty">아직 잡힌 대회가 없어요. <b>대회 추가</b>로 넣어 보세요.</div>';
+  $('#pastRaces').innerHTML=past.length?past.map(c=>raceCard(c,0)).join(''):'<div class="empty">지난 대회를 넣으면 기록과 기록증을 모아 볼 수 있어요.</div>';
+}
+let curRace=null;
+function openRace(id){
+  const c=S.races.find(x=>x.id===id);if(!c)return;curRace=id;
+  if(location.hash!=='#races')location.hash='races';
+  $('#raceList').classList.add('hide');const el=$('#raceDetail');el.classList.remove('hide');
+  const t0=today0(),up=dateOf(c.date)>=t0;const dd=Math.round((dateOf(c.date)-t0)/DAY);
+  let h=`<button class="back" id="back">← 대회 목록</button>
+   <h1>${esc(c.name)}</h1><p class="sub">${esc(c.date)} · ${distName(c.km)}${c.goal?' · 목표 '+esc(c.goal):''}${up?` · <b style="color:var(--acc)">${dd?'D-'+dd:'오늘이에요!'}</b>`:c.result?' · 완주 기록 <b>'+esc(c.result)+'</b>':''}</p>
+   <div class="row"><button class="btn" id="edit">대회 정보 고치기</button><label class="btn" style="margin:0;display:inline-flex;align-items:center">기록증·사진 올리기<input type="file" accept="image/*" multiple class="hide" id="rPh"></label><button class="btn ghost" id="delRace">대회 지우기</button></div>`;
+  const ph=(c.photos||[]);
+  if(ph.length)h+=`<h2>기록증·사진</h2><div class="gal">${ph.map((p,i)=>`<button class="ph-card" data-ph="${esc(c.id)}:${i}">${imgTag(p,c.name+' 사진')}</button>`).join('')}</div>`;
+  if(c.laps&&c.laps.length)h+=lapSection(c);
+  if(up){
+    const P=buildPlan(c);
+    h+=`<h2>주차별 훈련표</h2><p class="note">${P.gp?`페이스는 ${P.gp.src} ${fmtP(P.gp.p)}/km 기준이에요. `:'목표 기록을 넣으면 페이스도 알려드려요. '}최근 4주 평균 주간 거리 ${P.base.toFixed(0)}km에서 출발해요. 몸이 무겁거나 아픈 날은 쉬는 게 훈련이에요.</p>${P.note?`<p class="note">${esc(P.note)}</p>`:''}`;
+    const thisMon=monday(t0).getTime();
+    h+=`<div class="weeks">${P.weeks.map(w=>`<div class="wk ${w.ws.getTime()===thisMon?'now':''}" ${w.ws.getTime()===thisMon?'id="nowWk"':''}><div><div class="w num">${w.i}주차</div><div class="ph">${w.ph}${w.ws.getTime()===thisMon?' · 이번 주':''}</div><div class="dt">${md(w.ws)} ~ ${md(new Date(w.ws.getTime()+6*DAY))}</div><div class="km">합계 약 ${w.v}km</div></div><div class="ses">${w.s.map(s=>`<div class="se ${s.q?'q':''} ${s.race?'race-day':''}"><b class="day">${s.d}</b><span>${esc(s.t)} <b>${s.km}km</b></span><span class="pc">${esc(s.p)}</span></div>`).join('')}</div></div>`).join('')}</div>`;
+  }
+  el.innerHTML=h;$('#v-run').innerHTML='';curRun=null;hydrateImgs();
+  $('#back').onclick=closeRace;
+  if(c.laps&&c.laps.length)drawLapCharts(c);
+  $('#edit').onclick=()=>{editId=c.id;closeRace();raceForm(c);$('#raceForm').scrollIntoView({behavior:'smooth'})};
+  const dr=$('#delRace');dr.onclick=()=>{if(dr.dataset.armed){S.races=S.races.filter(x=>x.id!==c.id);saveRaces();closeRace();toast('대회를 지웠어요')}else{dr.dataset.armed=1;dr.textContent='정말 지울까요? (한 번 더)'}};
+  $('#rPh').onchange=e=>uploadPhotos(c.id,e.target.files);
+  window.scrollTo(0,0);
+  const nw=$('#nowWk');if(nw)setTimeout(()=>nw.scrollIntoView({behavior:'smooth',block:'center'}),150);
+}
+function closeRace(){curRace=null;$('#raceDetail').classList.add('hide');$('#raceList').classList.remove('hide');render()}
+document.addEventListener('click',e=>{const r=e.target.closest('[data-race]');if(r){openRace(r.dataset.race)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest&&e.target.closest('.next[data-race]');if(r)openRace(r.dataset.race)}if(e.key==='Escape')closeLb()});
+
+
+/* ---------- 구간 분석 ---------- */
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function lapInsights(laps){
+  const full=laps.filter(l=>l.km>=.9);const pc=full.map(l=>l.s/l.km);const out=[];
+  if(full.length<4)return out;
+  const half=Math.floor(full.length/2);const p1=avg(pc.slice(0,half)),p2=avg(pc.slice(half));
+  const diff=(p2-p1)/p1*100;
+  if(diff<2)out.push(`앞 절반 ${fmtP(p1)}, 뒤 절반 ${fmtP(p2)} — 끝까지 <b>고르게</b> 잘 뛰었어요.`);
+  else out.push(`앞 절반 평균 ${fmtP(p1)}, 뒤 절반 ${fmtP(p2)}로 후반이 <b>${diff.toFixed(0)}% 느려졌어요</b>.`);
+  const base=[...pc.slice(1,6)].sort((a,b)=>a-b)[Math.floor(Math.min(5,pc.length-1)/2)]||pc[0];
+  const slowAt=pc.findIndex((p,i)=>i>2&&p>base*1.07&&(pc[i+1]===undefined||pc[i+1]>base*1.05));
+  if(slowAt>0&&diff>=2)out.push(`초반 페이스(${fmtP(base)})보다 눈에 띄게 느려진 건 <b>${slowAt+1}km째</b>부터예요. 다음 대회는 이 지점 전까지 조금 더 아껴 뛰어 보세요.`);
+  const hr=full.map(l=>l.hr).filter(Boolean);
+  if(hr.length>5){const h1=avg(hr.slice(0,3)),hm=Math.max(...hr);out.push(`심박(구간 평균)은 처음 3km ${Math.round(h1)}에서 최고 ${hm}까지 올랐어요.${diff>=2&&avg(hr.slice(-4))>=avg(hr.slice(half,half+3))-3?' 속도가 줄어도 심박이 안 내려온 건 몸이 많이 지쳤다는 신호예요.':''}`)}
+  const cad=full.map(l=>l.cad).filter(Boolean),st=full.map(l=>l.st).filter(Boolean);
+  if(cad.length>5){const c1=avg(cad.slice(0,half)),c2=avg(cad.slice(-4));if(c1-c2>5)out.push(`케이던스(1분에 발 디딘 수)가 ${Math.round(c1)}에서 마지막엔 ${Math.round(c2)}로 줄었어요.${st.length>5?` 보폭도 ${avg(st.slice(0,half)).toFixed(2)}m → ${avg(st.slice(-4)).toFixed(2)}m로 짧아졌고요.`:''} 다리 힘이 떨어졌다는 뜻이라 장거리 훈련을 늘리면 좋아져요.`);else out.push(`케이던스는 평균 ${Math.round(avg(cad))}로 끝까지 잘 유지했어요.`)}
+  const tm=full.map(l=>l.tmp).filter(Boolean);
+  if(tm.length>5&&Math.max(...tm)-Math.min(...tm)>=6)out.push(`시계 온도가 ${Math.min(...tm)}도에서 ${Math.max(...tm)}도까지 올랐어요 (시계 온도는 체온 영향을 받아 실제 기온보다 높게 나와요).`);
+  return out;
+}
+function lapSection(c){
+  const L=c.laps,S2=c.lapSum||{};const pc=L.map(l=>l.s/l.km);const mx=Math.max(...pc),mn=Math.min(...pc);
+  const full=L.filter(l=>l.km>=.9);const base=avg(full.slice(0,5).map(l=>l.s/l.km));
+  const ins=lapInsights(L);
+  const has=k=>L.some(l=>l[k]);
+  return `<h2>구간 분석</h2>
+   <div class="lapsum"><div><b>${(S2.km||0).toFixed(2)}km</b><span>거리</span></div><div><b>${fmtT(S2.s)}</b><span>기록</span></div><div><b>${fmtP(S2.s/S2.km)}</b><span>평균 페이스</span></div><div><b>${S2.hr||'–'}</b><span>평균 심박${S2.mhr?' (최고 '+S2.mhr+')':''}</span></div></div>
+   ${ins.length?`<div class="insight"><b>한 줄 요약</b><ul>${ins.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+   <div class="card"><b>1km마다 페이스</b> <span class="note">· 막대가 길수록 느려요 · 주황색은 초반보다 7% 이상 느린 구간</span>
+   <div style="margin-top:10px">${L.map((l,i)=>{const p=l.s/l.km;const w=20+80*(p-mn*.97)/(mx-mn*.97||1);return`<div class="lap"><span class="n">${l.km<.9?l.km.toFixed(2):i+1}km</span><b class="num">${fmtP(p)}</b><div class="bar ${l.km>=.9&&p>base*1.07?'slow':''}" style="width:${Math.min(100,w).toFixed(1)}%"></div><span class="hr">${l.hr||''}</span></div>`}).join('')}</div>
+   <p class="note" style="margin:6px 0 0">오른쪽 숫자는 그 구간 평균 심박이에요.</p></div>
+   ${has('hr')?`<div class="card" style="margin-top:12px"><b>심박 변화</b><div class="fig sm"><svg id="lcHr"></svg></div></div>`:''}
+   ${has('cad')?`<div class="card" style="margin-top:12px"><b>케이던스 변화</b> <span class="note">· 1분에 발 디딘 수</span><div class="fig sm"><svg id="lcCad"></svg></div></div>`:''}
+   <details class="help" style="background:var(--paper);border:1px solid var(--line)"><summary>구간별 자세한 숫자 보기</summary><div class="scroll"><table><thead><tr><th>구간</th><th class="r">페이스</th><th class="r">심박</th>${has('cad')?'<th class="r">케이던스</th>':''}${has('st')?'<th class="r">보폭</th>':''}${has('gct')?'<th class="r hide-m">지면 접촉</th>':''}${has('vo')?'<th class="r hide-m">수직 진동</th>':''}${has('pw')?'<th class="r hide-m">파워</th>':''}${has('up')?'<th class="r hide-m">오르막</th>':''}</tr></thead><tbody>
+   ${L.map((l,i)=>`<tr><td>${i+1}</td><td class="r">${fmtP(l.s/l.km)}</td><td class="r">${l.hr||'–'}</td>${has('cad')?`<td class="r">${l.cad||'–'}</td>`:''}${has('st')?`<td class="r">${l.st?l.st.toFixed(2)+'m':'–'}</td>`:''}${has('gct')?`<td class="r hide-m">${l.gct||'–'}ms</td>`:''}${has('vo')?`<td class="r hide-m">${l.vo||'–'}cm</td>`:''}${has('pw')?`<td class="r hide-m">${l.pw||'–'}W</td>`:''}${has('up')?`<td class="r hide-m">${l.up}m</td>`:''}</tr>`).join('')}</tbody></table></div></details>`;
+}
+let lapRO=null;
+function drawLapCharts(c){
+  if(lapRO)lapRO.disconnect();
+  const line=(svg,vals,color,unit)=>{if(!svg)return;const W=svg.clientWidth,H=svg.clientHeight;if(!W)return;
+    const v=vals.map(x=>x||null);const ok=v.filter(x=>x!=null);if(!ok.length)return;
+    const lo=Math.floor(Math.min(...ok)/5)*5-5,hi=Math.ceil(Math.max(...ok)/5)*5+5;const pl=36,pb=24,pt=14;
+    const sx=i=>pl+(W-pl-10)*(v.length>1?i/(v.length-1):.5),sy=y=>H-pb-(y-lo)/(hi-lo)*(H-pb-pt);
+    let g='';for(let i=0;i<=3;i++){const y=lo+(hi-lo)*i/3;g+=`<line x1="${pl}" x2="${W}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--line)"/><text x="${pl-6}" y="${sy(y)+4}" text-anchor="end" font-size="11" fill="var(--mute)">${Math.round(y)}</text>`}
+    const step=W<520?5:2;v.forEach((_,i)=>{if((i+1)%step===0||i===0)g+=`<text x="${sx(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--mute)">${i+1}km</text>`});
+    const pts=v.map((y,i)=>y==null?null:`${sx(i).toFixed(1)},${sy(y).toFixed(1)}`).filter(Boolean).join(' ');
+    g+=`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    v.forEach((y,i)=>{if(y!=null)g+=`<circle cx="${sx(i)}" cy="${sy(y)}" r="3" fill="${color}"/>`});
+    svg.innerHTML=g};
+  const draw=()=>{line($('#lcHr'),c.laps.map(l=>l.hr),'var(--acc)');line($('#lcCad'),c.laps.map(l=>l.cad),'var(--ink)')};
+  lapRO=new ResizeObserver(draw);['#lcHr','#lcCad'].forEach(s=>{const e=$(s);if(e)lapRO.observe(e)});draw();
+}
+/* ---------- 사진 (구글 드라이브) ---------- */
+const imgCache=new Map();
+const imgTag=(p,alt)=>p.u?`<img src="${esc(p.u)}" alt="${esc(alt)}" loading="lazy">`:`<img data-f="${esc(p.f||'')}" alt="${esc(alt)}" loading="lazy">`;
+async function hydrateImgs(){
+  for(const im of document.querySelectorAll('img[data-f]')){
+    const id=im.dataset.f;if(!id||im.dataset.done)continue;
+    if(imgCache.has(id)){im.src=imgCache.get(id);im.dataset.done=1;continue}
+    if(!online()){im.alt='구글 드라이브를 연결하면 보여요';continue}
+    try{const r=await gfetch(DAPI+'/'+id+'?alt=media');const u=URL.createObjectURL(await r.blob());imgCache.set(id,u);im.src=u;im.dataset.done=1}catch(e){im.alt='사진을 불러오지 못했어요'}
+  }
+}
+async function shrink(file,max,q){
+  const img=await createImageBitmap(file);const sc=Math.min(1,max/Math.max(img.width,img.height));
+  const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+  cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  return new Promise(r=>cv.toBlob(r,'image/jpeg',q));
+}
+async function uploadPhotos(raceId,files){
+  const c=S.races.find(x=>x.id===raceId);if(!c||!files.length)return;
+  if(!online()){toast('사진은 구글 드라이브에 저장돼요. 위쪽의 연결 문구를 눌러 먼저 연결해 주세요');return}
+  c.photos=c.photos||[];toast('사진을 구글 드라이브에 올리는 중…');let ok=0;
+  for(const f of files){
+    try{const b=await shrink(f,2000,.88);const id=await createFile(`${c.date} ${c.name} ${c.photos.length+1}.jpg`,b);imgCache.set(id,URL.createObjectURL(b));c.photos.push({f:id});ok++}
+    catch(e){toast(e.code==='auth'?'구글 연결이 끊겼어요. 다시 연결해 주세요':'사진 하나를 올리지 못했어요')}
+  }
+  await saveRaces();toast(`사진 ${ok}장을 올렸어요`);
+  if(curRace===raceId)openRace(raceId);render();
+}
+function renderPhotos(){
+  const rs=[...S.races].sort((a,b)=>b.date.localeCompare(a.date));
+  $('#phRace').innerHTML=rs.length?rs.map(c=>`<option value="${esc(c.id)}">${esc(c.date)} ${esc(c.name)}</option>`).join(''):'<option value="">먼저 대회를 추가해 주세요</option>';
+  const all=[];rs.forEach(c=>(c.photos||[]).forEach((p,i)=>all.push({c,p,i})));
+  $('#gal').innerHTML=all.length?all.map(({c,p,i})=>`<button class="ph-card" data-ph="${esc(c.id)}:${i}">${imgTag(p,c.name+' 기록증')}<div class="cap"><b>${esc(c.name)}</b><span>${esc(c.date)} · ${distName(c.km)}${c.result?' · '+esc(c.result):''}</span></div></button>`).join(''):'<div class="empty" style="grid-column:1/-1">아직 올린 기록증이 없어요. 대회를 고르고 <b>사진 올리기</b>를 눌러 보세요.</div>';
+}
+$('#phFile').addEventListener('change',e=>{const id=$('#phRace').value;if(!id){toast('먼저 대회를 추가해 주세요');return}uploadPhotos(id,e.target.files);e.target.value=''});
+let lbKey=null;
+document.addEventListener('click',e=>{const p=e.target.closest('[data-ph]');if(!p)return;const[id,i]=p.dataset.ph.split(':');const c=S.races.find(x=>x.id===id);const ph=c&&c.photos[+i];if(!ph)return;
+  lbKey=[id,+i];$('#lbImg').src=ph.u||imgCache.get(ph.f)||'';$('#lbCap').textContent=`${c.name} · ${c.date}${c.result?' · '+c.result:''}`;const d=$('#lbDel');d.textContent='삭제';delete d.dataset.armed;$('#lb').classList.add('on')});
+function closeLb(){$('#lb').classList.remove('on');lbKey=null}
+$('#lbClose').onclick=closeLb;$('#lb').addEventListener('click',e=>{if(e.target.id==='lb')closeLb()});
+$('#lbDel').onclick=e=>{const b=e.target;if(!b.dataset.armed){b.dataset.armed=1;b.textContent='정말 삭제?';return}
+  const[id,i]=lbKey;const c=S.races.find(x=>x.id===id);const ph=c.photos[i];c.photos.splice(i,1);saveRaces();
+  if(ph&&ph.f&&online()){gfetch(DAPI+'/'+ph.f,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})}).catch(()=>{})}
+  closeLb();if(curRace===id)openRace(id);render();toast('사진을 지웠어요')};
+
+/* ---------- 러닝 상세 ---------- */
+let curRun=null;
+function raceForRun(r){return S.races.find(c=>c.laps&&c.laps.length&&c.date===r.d.slice(0,10)&&Math.abs(((c.lapSum&&c.lapSum.km)||c.km)-r.km)<.5)}
+function openRun(id){
+  const r=S.runs.find(x=>x.id===id);if(!r)return;curRun=id;
+  $('#raceDetail').innerHTML='';
+  if(location.hash!=='#run')location.hash='run';
+  const c=raceForRun(r);
+  const UNIT=[[/(bpm)$|심박|HR/i,'bpm'],[/칼로리|Calories/i,'kcal'],[/케이던스|Cadence/i,'spm'],[/보폭|Stride/i,'m'],[/상승|하강|고도|Ascent|Descent|Elev/i,'m'],[/파워|Power/i,'W'],[/온도|Temp/i,'°C'],[/수직 진동|Oscillation/i,'cm'],[/지면 접촉 시간|Ground Contact/i,'ms'],[/수직 비율|Ratio|밸런스|Balance/i,'%'],[/^거리$|^Distance$/i,'km'],[/페이스|Pace/i,'/km']];
+  const pretty=k=>k.replace(/\s+(bpm|min\/km|km|m|cm|ms|%|W|C|보\/분|W\/kg|cm\/s)$/,'');
+  const unit=(k,v)=>{if(/[a-z가-힣%°]$/i.test(v)||/:/.test(v)&&!/페이스|Pace/i.test(k))return'';const m=k.match(/\s(W\/kg|cm\/s|보\/분)$/);if(m)return m[1]==='보/분'?'spm':m[1];const u=UNIT.find(([re])=>re.test(k));return u?u[1]:''};
+  const SKIP=/^(즐겨찾기|Favorite|날짜|Date|제목|Title|활동 유형|Activity Type)$/i;
+  let h=`<button class="back" id="runBack">← 기록 목록</button>
+   <h1>${esc(r.t)}</h1><p class="sub">${esc(r.d.slice(0,10))} ${esc(r.d.slice(11,16))}${c?` · <a href="#races" data-race="${esc(c.id)}" style="color:var(--acc)">${esc(c.name)} 대회 화면으로</a>`:''}</p>
+   <div class="bibs"><div class="bib hot"><div class="v num">${r.km.toFixed(2)}<small>km</small></div><div class="k">거리</div></div><div class="bib"><div class="v num">${fmtT(r.s)}</div><div class="k">시간</div></div><div class="bib"><div class="v num">${fmtP(r.s/r.km)}<small>/km</small></div><div class="k">평균 페이스</div></div><div class="bib"><div class="v num">${r.hr||'–'}<small>bpm</small></div><div class="k">평균 심박</div></div></div>`;
+  if(c)h+=lapSection(c);
+  if(r.x){
+    const keys=Object.keys(r.x);
+    h+=`<h2>가민 기록 파일의 모든 수치</h2><div class="kv">${keys.filter(k=>!SKIP.test(k)).map(k=>{const v=r.x[k],u=unit(k,v);return`<div><span>${esc(pretty(k))}</span><b>${esc(v)}${u?` <small>${esc(u)}</small>`:''}</b></div>`}).join('')}</div>`;
+  }else h+=`<div class="empty" style="margin-top:20px">${c?'구간 파일로 만든 기록이에요. ':''}가민 <b>활동 목록 CSV</b>를 다시 넣으면 여기 칼로리·케이던스·고도 같은 수치가 모두 채워져요.</div>`;
+  $('#v-run').innerHTML=h;
+  $('#runBack').onclick=()=>{curRun=null;location.hash='records'};
+  if(c)drawLapCharts(c);
+  window.scrollTo(0,0);
+}
+$('#runs').addEventListener('click',e=>{const b=e.target.closest('[data-run]');if(b)openRun(b.dataset.run)});
+
+/* ---------- 설정 ---------- */
+function renderSettings(){
+  const el=$('#v-settings');if(!el)return;
+  const fromCfg=!!(window.APP_CONFIG&&APP_CONFIG.googleClientId);
+  el.innerHTML=`<h1>설정</h1><p class="sub">이 화면의 내용은 기기마다 한 번씩만 하면 돼요.</p>
+  <div class="card"><h3 class="st">구글 드라이브 (기록·사진 저장)</h3>
+    <p style="margin:0 0 10px">${online()?'<b style="color:var(--ok)">연결됨</b> — 내 구글 드라이브의 <b>내 러닝 기록장</b> 폴더에 저장하고 있어요.':CFG.clientId?'아직 연결 안 됨 — 버튼을 누르면 구글 로그인 창이 떠요.':'먼저 아래 <b>처음 한 번 준비</b>를 따라 구글 클라이언트 ID를 만들어 주세요.'}</p>
+    ${fromCfg?'':`<label for="sCid">구글 클라이언트 ID</label><input id="sCid" value="${esc(CFG.clientId)}" placeholder="1234...apps.googleusercontent.com" style="margin-bottom:10px">`}
+    <div class="row">${online()?'<button class="btn" id="sPull">지금 동기화</button><button class="btn ghost" id="sOut">연결 끊기</button>':'<button class="btn pri" id="sIn">구글 드라이브 연결</button>'}</div>
+    <p class="note">보안을 위해 구글 연결은 1시간쯤 지나면 쉬어요. 그땐 위쪽 문구를 한 번 누르면 바로 다시 이어져요.</p></div>
+  <div class="card" style="margin-top:14px"><h3 class="st">GPT (대회 검색)</h3>
+    <label for="sKey">OpenAI API 키</label><input id="sKey" type="password" value="${esc(CFG.gptKey)}" placeholder="sk-..." autocomplete="off">
+    <label for="sModel" style="margin-top:10px">모델</label><input id="sModel" value="${esc(CFG.gptModel)}" placeholder="gpt-5.5">
+    <p class="note">웹 검색을 지원하는 모델이어야 해요. 기본값은 gpt-5.5예요.</p>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:500;margin:6px 0"><input type="checkbox" id="sShare" style="width:auto;min-height:0" checked> 내 구글 드라이브에도 저장해서 다른 기기에서도 쓰기</label>
+    <div class="row"><button class="btn pri" id="sSave">저장</button><button class="btn ghost" id="sTest">검색 시험해 보기</button></div><div id="sTestRes"></div></div>
+  <div class="card" style="margin-top:14px"><h3 class="st">백업</h3>
+    <p style="margin:0 0 10px">기록 전체(사진 제외)를 파일 하나로 내려받거나, 그 파일을 불러올 수 있어요.</p>
+    <div class="row"><button class="btn" id="sExp">백업 파일 내려받기</button><label class="btn" style="margin:0;display:inline-flex;align-items:center">백업 파일 불러오기<input type="file" id="sImp" accept=".json,application/json" class="hide"></label></div></div>
+  <details class="help" style="margin-top:14px"${CFG.clientId?'':' open'}><summary>처음 한 번 준비: 구글 클라이언트 ID 만들기 (10분)</summary>
+    <ol>
+      <li><b>console.cloud.google.com</b> 에 구글 계정으로 들어가서 위쪽 프로젝트 고르는 곳 → <b>새 프로젝트</b> → 이름 "내 러닝 기록장" → 만들기.</li>
+      <li>위 검색창에 <b>Google Drive API</b>를 검색 → <b>사용</b> 버튼.</li>
+      <li>왼쪽 메뉴 <b>Google 인증 플랫폼</b>(또는 OAuth 동의 화면) → <b>시작하기</b> → 앱 이름 "내 러닝 기록장", 지원 이메일은 내 메일 → 대상은 <b>외부</b> → 만들기.</li>
+      <li>같은 메뉴의 <b>대상</b>(테스트 사용자) → <b>사용자 추가</b>에 내 구글 메일을 넣어요. 나만 쓰는 앱이라 이걸로 충분해요.</li>
+      <li><b>클라이언트</b>(사용자 인증 정보) → <b>클라이언트 만들기</b> → 유형 <b>웹 애플리케이션</b> → <b>승인된 JavaScript 원본</b>에 이 앱 주소 <code>${esc(location.origin)}</code> 를 넣고 만들기.</li>
+      <li>만들어진 <b>클라이언트 ID</b>(…apps.googleusercontent.com)를 복사해서 이 화면 위쪽 칸에 붙여 넣고 <b>구글 드라이브 연결</b>을 눌러요.</li>
+      <li>로그인할 때 "Google에서 확인하지 않은 앱" 안내가 뜨면 <b>계속</b>을 눌러요. 내가 만든 앱이라 그래요.</li>
+    </ol></details>`;
+  const cid=$('#sCid');
+  const keepCid=()=>{if(cid&&cid.value.trim()!==CFG.clientId){CFG.clientId=cid.value.trim();saveCfg();G.tc=null}};
+  if($('#sIn'))$('#sIn').onclick=()=>{keepCid();connect()};
+  if($('#sOut'))$('#sOut').onclick=disconnect;
+  if($('#sPull'))$('#sPull').onclick=()=>pull().then(()=>toast('동기화했어요')).catch(()=>setSync('err'));
+  $('#sSave').onclick=async()=>{CFG.gptKey=$('#sKey').value.trim();CFG.gptModel=$('#sModel').value.trim()||'gpt-5.5';saveCfg();
+    if($('#sShare').checked&&CFG.gptKey){try{toast((await pushSettings())?'저장했어요 (다른 기기에서도 쓸 수 있어요)':'이 기기에 저장했어요. 구글 연결 후 다시 저장하면 다른 기기에서도 써요')}catch(e){toast('이 기기에는 저장했지만 드라이브 저장은 실패했어요')}}else toast('이 기기에 저장했어요')};
+  $('#sTest').onclick=()=>{CFG.gptKey=$('#sKey').value.trim()||CFG.gptKey;CFG.gptModel=$('#sModel').value.trim()||CFG.gptModel;raceSearchUI('서울마라톤',$('#sTestRes'),x=>toast(`${x.name} ${x.date}`))};
+  $('#sExp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(jblob(S));a.download=`러닝기록장-백업-${ymd(new Date())}.json`;document.body.appendChild(a);a.click();a.remove()};
+  $('#sImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const j=JSON.parse(rd.result);if(!Array.isArray(j.runs))throw 0;S={runs:j.runs,races:j.races||[],updatedAt:Date.now()};saveLocal();schedulePush();render();toast('백업을 불러왔어요')}catch(x){toast('백업 파일이 아닌 것 같아요')}};rd.readAsText(f)};
+}
+
+/* ---------- 화면 전환 ---------- */
+const VIEWS=['records','races','photos','settings','run'];
+function route(){
+  let v=location.hash.slice(1);if(!VIEWS.includes(v))v='records';
+  if(v==='run'&&!curRun)v='records';
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v||(v==='run'&&a.dataset.v==='records')));
+  VIEWS.forEach(x=>$('#v-'+x).classList.toggle('hide',x!==v));
+  if(v!=='races'&&curRace){curRace=null;$('#raceDetail').classList.add('hide');$('#raceList').classList.remove('hide')}
+  if(v!=='run'&&curRun){curRun=null;$('#v-run').innerHTML=''}
+  if(v==='records')drawChart();
+  if(v==='settings')renderSettings();
+  hydrateImgs();
+}
+window.addEventListener('hashchange',route);
+function render(){renderRecords();renderRaces();renderPhotos();if(curRace&&!$('#raceDetail').classList.contains('hide'))openRace(curRace);if(curRun)openRun(curRun);hydrateImgs()}
+init();
+}
+</script>
+</body>
+</html>
