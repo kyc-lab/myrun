@@ -237,7 +237,9 @@ if(window.APP_CONFIG&&APP_CONFIG.googleClientId)CFG.clientId=APP_CONFIG.googleCl
 function saveCfg(){try{localStorage.setItem(SKEY,JSON.stringify(CFG))}catch(e){}}
 
 /* ---------- 이 기기 저장 ---------- */
-function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY)||'null');if(j)S=j}catch(e){}S.runs=S.runs||[];S.races=S.races||[];S.updatedAt=S.updatedAt||0}
+function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY)||'null');if(j)S=j}catch(e){}S.runs=S.runs||[];S.races=S.races||[];S.updatedAt=S.updatedAt||0;if(fixUnits())S.updatedAt=Date.now()}
+// 미터로 적힌 거리 바로잡기: 1km를 100초보다 빨리 뛴 기록은 사람이 낼 수 없어서 m 단위로 보고 1000으로 나눠요
+function fixUnits(){let n=0;for(const r of S.runs||[]){if(r.km>=50&&r.s/r.km<100){r.km=+(r.km/1000).toFixed(2);n++}}return n}
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast('이 기기 저장 공간이 부족해요')}}
 function touch(){S.updatedAt=Date.now();saveLocal();schedulePush()}
 async function saveRaces(){touch()}
@@ -308,7 +310,7 @@ async function pull(){
   G.dataId=await fileIdOf('data.json');
   if(G.dataId){
     const remote=await readJSON(G.dataId);
-    if((remote.updatedAt||0)>(S.updatedAt||0)){S=remote;S.runs=S.runs||[];S.races=S.races||[];saveLocal();render()}
+    if((remote.updatedAt||0)>(S.updatedAt||0)){S=remote;S.runs=S.runs||[];S.races=S.races||[];if(fixUnits()){S.updatedAt=Date.now();saveLocal();render();syncing=false;await push()}else{saveLocal();render()}}
     else if((S.updatedAt||0)>(remote.updatedAt||0)){syncing=false;await push()}
   }else if(S.runs.length||S.races.length){await push()}
   G.setId=await fileIdOf('settings.json');
@@ -381,8 +383,9 @@ function importCSV(text){
     const ds=(r[iD]||'').trim();const m=ds.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})(?:\D+(\d{1,2}):(\d{2}))?/);if(!m)continue;
     let hh=+(m[4]||0);if(/오후|PM/i.test(ds)&&hh<12)hh+=12;
     const d=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}T${String(hh).padStart(2,'0')}:${m[5]||'00'}`;
-    const km=parseFloat(String(r[iK]).replace(/,/g,''));const s=parseT(r[iS]);
+    let km=parseFloat(String(r[iK]).replace(/,/g,''));const s=parseT(r[iS]);
     if(!(km>0)||!(s>0))continue;
+    if(km>=50&&s/km<100)km=km/1000; // 미터로 적힌 기록
     const x={};h.forEach((k,i)=>{const v=(r[i]||'').trim();if(k&&v&&v!=='--')x[k]=v});
     const id=d+'|'+km.toFixed(2);const title=(iTi>=0?r[iTi]:'')||type||'러닝';
     if(have.has(id)){const o=have.get(id);if(!o.x){o.x=x;upd++}continue}
