@@ -150,7 +150,7 @@ details.help ol{margin:8px 0 2px;padding-left:20px}
   <h1 id="recTitle">달린 기록을 한눈에</h1>
   <p class="sub" id="recSub">가민 커넥트에서 내려받은 기록 파일(CSV)을 넣으면 여기에 모여요.</p>
   <div class="row">
-    <label class="btn pri" style="margin:0;display:inline-flex;align-items:center">가민 기록 파일 넣기<input type="file" id="csv" accept=".csv,text/csv" class="hide"></label>
+    <label class="btn pri" style="margin:0;display:inline-flex;align-items:center">가민 기록 파일 넣기<input type="file" id="csv" class="hide"></label>
     <button class="btn" id="addRunBtn">직접 입력</button>
   </div>
   <details class="help"><summary>가민 기록 파일(CSV)은 어떻게 받나요?</summary>
@@ -835,7 +835,7 @@ function renderSettings(){
     <div class="row"><button class="btn pri" id="sSave">저장</button><button class="btn ghost" id="sTest">검색 시험해 보기</button></div><div id="sTestRes"></div></div>
   <div class="card" style="margin-top:14px"><h3 class="st">백업</h3>
     <p style="margin:0 0 10px">기록 전체(사진 제외)를 파일 하나로 내려받거나, 그 파일을 불러올 수 있어요.</p>
-    <div class="row"><button class="btn" id="sExp">백업 파일 내려받기</button><label class="btn" style="margin:0;display:inline-flex;align-items:center">백업 파일 불러오기<input type="file" id="sImp" accept=".json,application/json" class="hide"></label></div></div>
+    <div class="row"><button class="btn" id="sExp">백업 파일 내려받기</button><label class="btn" style="margin:0;display:inline-flex;align-items:center">백업 파일 불러오기<input type="file" id="sImp" class="hide"></label></div></div>
   <details class="help" style="margin-top:14px"${CFG.clientId?'':' open'}><summary>처음 한 번 준비: 구글 클라이언트 ID 만들기 (10분)</summary>
     <ol>
       <li><b>console.cloud.google.com</b> 에 구글 계정으로 들어가서 위쪽 프로젝트 고르는 곳 → <b>새 프로젝트</b> → 이름 "내 러닝 기록장" → 만들기.</li>
